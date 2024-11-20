@@ -3,9 +3,11 @@ import Box from "./Box";
 import axios from "axios";
 
 function Game({socket}) {
-  const [direction, setDirection]=useState("S")
+  const [direction, setDirection]  = useState("S");
+
+  const directionRef=useRef(direction);
   const [gameStatus, setGameStatus] = useState({
-    score: 0, lives:3, isLive: true, isPredator:false , status:"notstarted"
+    score: 0, lives:3, die: false, isPredator:false , status:"notstarted"
   });
   
   // Example state to manage grid data (optional)
@@ -15,10 +17,10 @@ function Game({socket}) {
       [1, 128, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 128, 1],
       [1, 6, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1],
       [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-      [1, 2, 1, 2, 1, 8, 1, 1, 1, 0, 1, 2, 1, 2, 1],
+      [1, 2, 1, 2, 1, 0, 1, 1, 1, 0, 1, 2, 1, 2, 1],
       [1, 2, 2, 2, 0, 0, 0, 1, 0, 0, 0, 2, 2, 2, 1],
       [1, 1, 1, 2, 1, 1, 0, 0, 0, 1, 1, 2, 1, 1, 1],
-      [0, 0, 0, 2, 0, 0, 0, 112, 0, 0, 0, 2, 0, 0, 0],
+      [1, 0, 8, 2, 0, 0, 0, 112, 0, 0, 0, 2, 0, 0, 1],
       [1, 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 2, 1, 1, 1],
       [1, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 1],
       [1, 1, 2, 1, 1, 2, 2, 2, 2, 2, 1, 1, 2, 1, 1],
@@ -51,12 +53,10 @@ function Game({socket}) {
               status: "notstarted",
               lives:3,
               score:0,
-              isLive: true,
+              die: true,
               isPredator:false
             });
             setDirection("S")
-  
-          
           }
         break;
         default:
@@ -72,26 +72,19 @@ function Game({socket}) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
   useEffect(() => {
-    var timeint
+    directionRef.current=direction
+    console.log(gameStatus.isPredator);
     if (gameStatus.status=="notstarted" && direction!="S"){
       
       setGameStatus(prevStatus => ({
         ...prevStatus,
         status: "started"
       }))
-      timeint=setInterval(() => {
-        axios.post('https://localhost:8080',{direction})
-        .then((response) => {
-          setGameStatus(response.data);  // Set the response data to the state
-          
-        })
-        .catch((error) => {
-          setError('Error fetching data',error);
-        });
-      }, 1000);///one seond if works can reduce this time!!!!!
-
+      startrInterval()
     }
+
     if (gameStatus.status=="gameover"){
       clearInterval(timeint)
       setGameStatus(prev=>({
@@ -99,12 +92,42 @@ function Game({socket}) {
         status:"notstarted"
       }))
     }
-    if (socket.current && socket.current.readyState === WebSocket.OPEN && direction!="S") {
-      
-      socket.current.send(direction);
-    }
   }, [direction])
-  
+
+  var timeint;
+
+  function startrInterval(){
+    timeint = setInterval(() => {
+      console.log(directionRef.current)
+      axios.post('http://localhost:8080/', directionRef.current, {
+        headers: {
+          'Content-Type': 'application/json', // Ensure proper content type
+        },
+      })
+      .then((response) => {
+        setGameStatus({
+          status: response.data.status,
+          lives:JSON.parse(response.data.lives),
+          score:JSON.parse(response.data.score),
+          die:JSON.parse(response.data.die),
+          isPredator:JSON.parse(response.data.isPredator)
+        }); // Set the response data to the state
+        
+        console.log("status:" ,response.data.status,
+          "lives:",JSON.parse(response.data.lives),
+          "score:",JSON.parse(response.data.score),
+          "die:", JSON.parse(response.data.die),
+          "isPredator:", JSON.parse(response.data.isPredator));
+
+        console.log(typeof(JSON.parse(response.data.die)))
+        
+        setGrid(JSON.parse(response.data.boardArray));
+      })
+      .catch((error) => {
+        console.log('Error fetching data', error.response.data); // Log error details
+      });
+    }, 2000);
+  }
   
   return (
     <div style={styles.pageContainer}>
@@ -118,7 +141,7 @@ function Game({socket}) {
             <div key={rowIndex} style={styles.row}>
               {row.map((cell, colIndex) => (
                 <Box key={`${rowIndex}-${colIndex}`} value={cell} direction={direction} 
-                isPredator={gameStatus.isPredator} isLive={gameStatus.isLive}
+                isPredator={gameStatus.isPredator} die={gameStatus.die}
                 />
               ))}
             </div>
