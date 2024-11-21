@@ -7,7 +7,7 @@ function Game({socket}) {
 
   const directionRef=useRef(direction);
   const [gameStatus, setGameStatus] = useState({
-    score: 0, lives:3, die: false, isPredator:false , status:"notstarted"
+    score: 0, lives:3, die: false, isPredator:false , status:"OFF"
   });
   
   // Example state to manage grid data (optional)
@@ -50,7 +50,7 @@ function Game({socket}) {
         case 'Enter':
           if (gameStatus.status=="gameover"){
             setGameStatus({
-              status: "notstarted",
+              status: "OFF",
               lives:3,
               score:0,
               die: true,
@@ -76,20 +76,20 @@ function Game({socket}) {
   useEffect(() => {
     directionRef.current=direction
     console.log(gameStatus.isPredator);
-    if (gameStatus.status=="notstarted" && direction!="S"){
+    if (gameStatus.status=="OFF" && direction!="S"){
       
       setGameStatus(prevStatus => ({
         ...prevStatus,
-        status: "started"
+        status: "ON"
       }))
       startrInterval()
     }
 
-    if (gameStatus.status=="gameover"){
+    if (gameStatus.status=="LOSS"){
       clearInterval(timeint)
       setGameStatus(prev=>({
         prev,
-        status:"notstarted"
+        status:"OFF"
       }))
     }
   }, [direction])
@@ -148,11 +148,11 @@ function Game({socket}) {
           ))}
         </div>
       </div>
-      {gameStatus.status=="notstarted" && <div style={styles.messegeContainer}>
+      {gameStatus.status=="OFF" && <div style={styles.messegeContainer}>
         to start press any arrow
       </div>
       }
-      {gameStatus.status=="gameover" && <div style={styles.messegeContainer}>
+      {gameStatus.status=="LOSS" && <div style={styles.messegeContainer}>
         GAMEOVER
         to play again press enter
       </div>
