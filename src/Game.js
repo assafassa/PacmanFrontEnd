@@ -49,7 +49,7 @@ function Game() {
           break;
         case " ":
           console.log(gameStatus.status)
-          if (gameStatus.status=="LOSS" || gameStatus.status=="WIN"){
+          if (gameStatus.status == "LOSS" || gameStatus.status == "WIN"){
             console.log("hi")
             setDirection("S");
             setGameStatus({
@@ -59,7 +59,6 @@ function Game() {
               die: false,
               isPredator:false
             });
-            
           }
          break;
         default:
@@ -79,7 +78,7 @@ function Game() {
   useEffect(() => {
     directionRef.current=direction
     console.log(gameStatus.isPredator);
-    if (gameStatus.status=="OFF" && direction!="S" ){
+    if (gameStatus.status == "OFF" && direction != "S" ){
       
       setGameStatus(prevStatus => ({
         ...prevStatus,
@@ -88,25 +87,17 @@ function Game() {
       startrInterval()
       console.log("starttime")
     }
-
     
   }, [direction])
 
   useEffect(() => {
-    if (gameStatus.status=="LOSS"||gameStatus.status=="WIN"){
+    if (gameStatus.status == "LOSS"||gameStatus.status == "WIN") {
       clearInterval(timeint)
-      
-      
-      
-      
     }
-  
-    
   }, [gameStatus])
-  
-  
 
-  function startrInterval(){
+
+  function startrInterval() {
     var timeintcopy = setInterval(() => {
       
         axios.post('http://localhost:8080/', directionRef.current, {
@@ -160,17 +151,17 @@ function Game() {
           ))}
         </div>
       </div>
-      {gameStatus.status=="OFF" && <div style={styles.messegeContainer}>
+      {gameStatus.status == "OFF" && <div style={styles.messegeContainer}>
         to start press any arrow
       </div>
       }
-      {gameStatus.status=="LOSS" && <div style={styles.messegeContainer}>
+      {gameStatus.status == "LOSS" && <div style={styles.messegeContainer}>
         GAME OVER
         to play again press enter
       </div>
       }
-      {gameStatus.status=="WIN" && <div style={styles.messegeContainer}>
-        VICTORY
+      {gameStatus.status == "WIN" && <div style={styles.messegeContainer}>
+        VICTORY !!
         to play again press enter
       </div>
       }
