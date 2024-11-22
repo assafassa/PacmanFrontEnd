@@ -47,18 +47,21 @@ function Game() {
         case 'ArrowRight':
           setDirection('R');
           break;
-        case 'Enter':
-          if (gameStatus.status=="LOSS" ||gameStatus.status=="WIN"){
+        case " ":
+          console.log(gameStatus.status)
+          if (gameStatus.status=="LOSS" || gameStatus.status=="WIN"){
+            console.log("hi")
+            setDirection("S");
             setGameStatus({
               status: "OFF",
               lives:3,
               score:0,
-              die: true,
+              die: false,
               isPredator:false
             });
-            setDirection("S");
+            
           }
-        break;
+         break;
         default:
           break;
       }
@@ -91,15 +94,10 @@ function Game() {
 
   useEffect(() => {
     if (gameStatus.status=="LOSS"||gameStatus.status=="WIN"){
-      setDirection("S")
-      console.log("you lost the game")
-      setGameStatus(prev=>({
-        prev,
-        status:"OFF"
-      }))
-      
       clearInterval(timeint)
-      console.log("cleared time interval")
+      
+      
+      
       
     }
   
@@ -139,7 +137,7 @@ function Game() {
           console.log('Error fetching data', error.response.data); // Log error details
         });
       
-    }, 2000);
+    }, 1000);
     SetTimeInt(timeintcopy)
   }
   
