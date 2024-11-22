@@ -2,14 +2,14 @@ import React, { useState, useEffect ,useRef} from "react";
 import Box from "./Box";
 import axios from "axios";
 
-function Game({socket}) {
+function Game() {
   const [direction, setDirection]  = useState("S");
 
   const directionRef=useRef(direction);
   const [gameStatus, setGameStatus] = useState({
     score: 0, lives:3, die: false, isPredator:false , status:"OFF"
   });
-  
+  const[ timeint,SetTimeInt]=useState();
   // Example state to manage grid data (optional)
   const [grid, setGrid] = useState(
     [
@@ -48,7 +48,7 @@ function Game({socket}) {
           setDirection('R');
           break;
         case 'Enter':
-          if (gameStatus.status=="gameover"){
+          if (gameStatus.status=="LOSS" ||gameStatus.status=="WIN"){
             setGameStatus({
               status: "OFF",
               lives:3,
@@ -56,7 +56,7 @@ function Game({socket}) {
               die: true,
               isPredator:false
             });
-            setDirection("S")
+            setDirection("S");
           }
         break;
         default:
@@ -76,57 +76,71 @@ function Game({socket}) {
   useEffect(() => {
     directionRef.current=direction
     console.log(gameStatus.isPredator);
-    if (gameStatus.status=="OFF" && direction!="S"){
+    if (gameStatus.status=="OFF" && direction!="S" ){
       
       setGameStatus(prevStatus => ({
         ...prevStatus,
         status: "ON"
       }))
       startrInterval()
+      console.log("starttime")
     }
 
-    if (gameStatus.status=="LOSS"){
-      clearInterval(timeint)
+    
+  }, [direction])
+
+  useEffect(() => {
+    if (gameStatus.status=="LOSS"||gameStatus.status=="WIN"){
+      setDirection("S")
+      console.log("you lost the game")
       setGameStatus(prev=>({
         prev,
         status:"OFF"
       }))
+      
+      clearInterval(timeint)
+      console.log("cleared time interval")
+      
     }
-  }, [direction])
-
-  var timeint;
+  
+    
+  }, [gameStatus])
+  
+  
 
   function startrInterval(){
-    timeint = setInterval(() => {
-      console.log(directionRef.current)
-      axios.post('http://localhost:8080/', directionRef.current, {
-        headers: {
-          'Content-Type': 'application/json', // Ensure proper content type
-        },
-      })
-      .then((response) => {
-        setGameStatus({
-          status: response.data.status,
-          lives:JSON.parse(response.data.lives),
-          score:JSON.parse(response.data.score),
-          die:JSON.parse(response.data.die),
-          isPredator:JSON.parse(response.data.isPredator)
-        }); // Set the response data to the state
-        
-        console.log("status:" ,response.data.status,
-          "lives:",JSON.parse(response.data.lives),
-          "score:",JSON.parse(response.data.score),
-          "die:", JSON.parse(response.data.die),
-          "isPredator:", JSON.parse(response.data.isPredator));
+    var timeintcopy = setInterval(() => {
+      
+        axios.post('http://localhost:8080/', directionRef.current, {
+          headers: {
+            'Content-Type': 'application/json', // Ensure proper content type
+          },
+        })
+        .then((response) => {
+          setGameStatus({
+            status: response.data.status,
+            lives:JSON.parse(response.data.lives),
+            score:JSON.parse(response.data.score),
+            die:JSON.parse(response.data.die),
+            isPredator:JSON.parse(response.data.isPredator)
+          }); // Set the response data to the state
+          
+          console.log("status:" ,response.data.status,
+            "lives:",JSON.parse(response.data.lives),
+            "score:",JSON.parse(response.data.score),
+            "die:", JSON.parse(response.data.die),
+            "isPredator:", JSON.parse(response.data.isPredator));
 
-        console.log(typeof(JSON.parse(response.data.die)))
-        
-        setGrid(JSON.parse(response.data.boardArray));
-      })
-      .catch((error) => {
-        console.log('Error fetching data', error.response.data); // Log error details
-      });
+          console.log(typeof(JSON.parse(response.data.die)))
+          
+          setGrid(JSON.parse(response.data.boardArray));
+        })
+        .catch((error) => {
+          console.log('Error fetching data', error.response.data); // Log error details
+        });
+      
     }, 2000);
+    SetTimeInt(timeintcopy)
   }
   
   return (
@@ -153,7 +167,12 @@ function Game({socket}) {
       </div>
       }
       {gameStatus.status=="LOSS" && <div style={styles.messegeContainer}>
-        GAMEOVER
+        GAME OVER
+        to play again press enter
+      </div>
+      }
+      {gameStatus.status=="WIN" && <div style={styles.messegeContainer}>
+        VICTORY
         to play again press enter
       </div>
       }
