@@ -47,20 +47,7 @@ function Game() {
         case 'ArrowRight':
           setDirection('R');
           break;
-        case " ":
-          console.log(gameStatus.status)
-          if (gameStatus.status == "LOSS" || gameStatus.status == "WIN"){
-            console.log("hi")
-            setDirection("S");
-            setGameStatus({
-              status: "OFF",
-              lives:3,
-              score:0,
-              die: false,
-              isPredator:false
-            });
-          }
-         break;
+        
         default:
           break;
       }
@@ -91,10 +78,40 @@ function Game() {
   }, [direction])
 
   useEffect(() => {
+    console.log(gameStatus.status, "here")
     if (gameStatus.status == "LOSS"||gameStatus.status == "WIN") {
       clearInterval(timeint)
+      const handleKeyDown = (event) => {
+        switch (event.key) {
+          case "Enter":
+            setDirection("S");
+              setGameStatus((prevState) => ({
+                ...prevState, // Ensure immutability
+                status: "OFF",
+                lives: 3,
+                score: 0,
+                die: false,
+                isPredator: false,
+              }));
+           break;
+          default:
+            break;
+        }
+      };
+  
+      // Add the keydown event listener
+      window.addEventListener('keydown', handleKeyDown);
+  
+      // Cleanup event listener on component unmount
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+      
     }
+  
+    
   }, [gameStatus])
+  
 
 
   function startrInterval() {
